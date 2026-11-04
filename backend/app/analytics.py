@@ -111,3 +111,121 @@ def bundle_opportunity(df):
 def concentration(df):
     rev = df.groupby("product")["amount_usd"].sum().sort_values(ascending=False)
     return {"product": rev.index[0], "share": round(float(rev.iloc[0] / rev.sum()), 3)}
+
+
+# ---------------- Upload support ----------------
+import hashlib
+import io
+
+# Placeholder rates for testing only. Replace with a daily rates table before launch.
+RATES_TO_USD.update({
+    "AUD": 0.65, "CAD": 0.72, "NZD": 0.59, "CHF": 1.13, "SEK": 0.095, "NOK": 0.092,
+    "DKK": 0.146, "PLN": 0.25, "JPY": 0.0066, "INR": 0.012, "NGN": 0.00065,
+    "ZAR": 0.055, "GHS": 0.085, "UGX": 0.00027, "TZS": 0.00038, "AED": 0.272,
+    "SAR": 0.267, "BRL": 0.18, "MXN": 0.052, "SGD": 0.75, "TRY": 0.029,
+    "PHP": 0.017, "IDR": 0.000063, "MYR": 0.22,
+})
+
+ALIASES = {
+    "order_id": ["name", "order id", "order_id", "order number", "order"],
+    "customer_id": ["email", "buyer email", "customer email", "buyer user id", "customer_id", "customer", "buyer", "full name"],
+    "product": ["lineitem name", "item name", "product", "product name", "title"],
+    "quantity": ["lineitem quantity", "quantity", "qty"],
+    "price": ["lineitem price", "price", "unit price"],
+    "currency": ["currency"],
+    "date": ["created at", "sale date", "date", "order date", "created_at"],
+}
+
+
+def _hash_id(value):
+    return hashlib.sha256(str(value).strip().lower().encode("utf-8")).hexdigest()[:12]
+
+
+def normalize_upload(raw: bytes):
+    warnings = []
+    df = pd.read_csv(io.BytesIO(raw), dtype=str, encoding="utf-8-sig")
+    cols = {c.strip().lower(): c for c in df.columns}
+
+    pick = {}
+    for field, names in ALIASES.items():
+        for n in names:
+            if n in cols:
+                pick[field] = cols[n]
+                break
+
+    required = ["order_id", "customer_id", "product", "price", "date"]
+    missing = [f for f in required if f not in pick]
+    if missing:
+        raise ValueError(
+            "This file is missing columns we need (" + ", ".join(missing) + "). "
+            "Please upload an order export CSV from Shopify or Etsy."
+        )
+
+    out = pd.DataFrame({k: df[v] for k, v in pick.items()})
+    total_rows = len(out)
+
+    # Drop refunded / voided orders when the export says so (Shopify)
+    if "financial status" in cols:
+        status = df[cols["financial status"]].fillna("").str.strip().str.lower()
+        bad = status.isin(["refunded", "voided"])
+        if bad.any():
+            warnings.append(f"Skipped {int(bad.sum())} refunded or voided rows.")
+            out = out[~bad.values]
+
+    # Shopify only fills order-level fields on the first row of each order
+    for c in ("customer_id", "date", "currency"):
+        if c in out.columns:
+            out[c] = out.groupby("order_id")[c].transform(lambda s: s.ffill().bfill())
+
+    if "quantity" in out.columns:
+        qty = pd.to_numeric(out["quantity"], errors="coerce").fillna(1)
+    else:
+        qty = pd.Series(1, index=out.index)
+    price = pd.to_numeric(out["price"].str.replace(r"[^0-9.\-]", "", regex=True), errors="coerce")
+    out["quantity"] = qty
+    out["amount"] = price * qty
+    out["created_at_utc"] = pd.to_datetime(out["date"], utc=True, errors="coerce").dt.tz_convert(None)
+
+    if "currency" not in out.columns:
+        out["currency"] = "USD"
+        warnings.append("No currency column found, so all amounts were treated as USD.")
+    out["currency"] = out["currency"].fillna("USD").str.strip().str.upper()
+
+    out = out.dropna(subset=["customer_id", "product", "created_at_utc", "amount"])
+
+    unknown = sorted(set(out["currency"]) - set(RATES_TO_USD))
+    if unknown:
+        n = int(out["currency"].isin(unknown).sum())
+        warnings.append(f"Skipped {n} rows in currencies we cannot convert yet: {', '.join(unknown)}.")
+        out = out[~out["currency"].isin(unknown)]
+
+    dropped = total_rows - len(out)
+    if dropped > 0 and not any("Skipped" in w for w in warnings):
+        warnings.append(f"Skipped {dropped} rows with missing dates, customers, or prices.")
+
+    if len(out) < 20:
+        raise ValueError("We found fewer than 20 usable order rows. Upload a larger export (at least a few months of orders).")
+
+    out["customer_id"] = out["customer_id"].map(_hash_id)
+    out["amount_usd"] = out["amount"] * out["currency"].map(RATES_TO_USD)
+    cols_out = ["order_id", "customer_id", "product", "quantity", "currency", "amount", "created_at_utc", "amount_usd"]
+    return out[cols_out].reset_index(drop=True), warnings
+
+
+def build_report(df, source="upload", warnings=None):
+    return {
+        "meta": {
+            "source": source,
+            "orders": int(df["order_id"].nunique()),
+            "customers": int(df["customer_id"].nunique()),
+            "start": df["created_at_utc"].min().strftime("%Y-%m-%d"),
+            "end": df["created_at_utc"].max().strftime("%Y-%m-%d"),
+            "warnings": warnings or [],
+        },
+        "money_left": money_left_on_table(df),
+        "monthly_revenue": monthly_revenue(df),
+        "forecast": forecast(df),
+        "top_products": top_products(df),
+        "bundle": bundle_opportunity(df),
+        "concentration": concentration(df),
+    }

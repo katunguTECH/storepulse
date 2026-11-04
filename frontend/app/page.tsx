@@ -1,122 +1,116 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import WaitlistForm from "@/components/WaitlistForm";
 
-import { useEffect, useState } from "react";
-import { CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-const API = "http://127.0.0.1:8000";
-
-type Report = {
-  money_left: { total_usd: number; assumptions: string; items: { title: string; detail: string; value_usd: number }[] };
-  monthly_revenue: { month: string; revenue_usd: number; partial: boolean }[];
-  forecast: { month: string; forecast_usd: number; low_usd: number; high_usd: number }[];
-  top_products: { product: string; revenue_usd: number; units: number }[];
-  bundle: { products: string[]; customers: number; share_of_customers: number } | null;
-  concentration: { product: string; share: number };
+export const metadata: Metadata = {
+  title: "Storepulse: find the money your store is leaving on the table",
+  description:
+    "Upload your Shopify or Etsy orders and see which customers are due to reorder, what to bundle, and where your revenue is heading. Built for small online sellers worldwide.",
 };
-type Row = { month: string; actual?: number; forecast?: number };
 
-const usd = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+const features = [
+  {
+    title: "Money left on the table",
+    text: "See how many customers are overdue to reorder or have gone quiet, with an estimate of what a simple email could win back.",
+  },
+  {
+    title: "What to sell next",
+    text: "Spot products your customers buy together and ideas to bundle, plus which single product your revenue depends on too much.",
+  },
+  {
+    title: "A forecast you can read",
+    text: "Monthly revenue and a clear three-month outlook, without spreadsheets or jargon.",
+  },
+  {
+    title: "Coming soon",
+    text: "Free listing SEO checks, competitor comparison, profit after fees, and weekly action emails.",
+  },
+];
 
-export default function Home() {
-  const [data, setData] = useState<Report | null>(null);
-  const [error, setError] = useState("");
+const steps = [
+  { n: "1", title: "Export your orders", text: "Download a CSV from Shopify or Etsy. It takes about a minute." },
+  { n: "2", title: "Drop it in", text: "Upload the file. No store login or password needed." },
+  { n: "3", title: "Get your report", text: "See opportunities and next steps in plain language." },
+];
 
-  useEffect(() => {
-    fetch(`${API}/report`)
-      .then((r) => {
-        if (!r.ok) throw new Error("bad response");
-        return r.json();
-      })
-      .then(setData)
-      .catch(() => setError("Cannot reach the Storepulse API. Is uvicorn running on port 8000?"));
-  }, []);
-
-  if (error) return <main className="p-10 text-red-600">{error}</main>;
-  if (!data) return <main className="p-10 text-gray-500">Loading your report...</main>;
-
-  const rows: Row[] = data.monthly_revenue
-    .filter((m) => !m.partial)
-    .map((m) => ({ month: m.month, actual: m.revenue_usd }));
-  if (rows.length) rows[rows.length - 1].forecast = rows[rows.length - 1].actual;
-  data.forecast.forEach((f) => rows.push({ month: f.month, forecast: f.forecast_usd }));
-  const partial = data.monthly_revenue.find((m) => m.partial);
-
+export default function Landing() {
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-6 md:p-10">
-      <header>
-        <h1 className="text-2xl font-bold">Storepulse</h1>
-        <p className="text-gray-500">Your store, explained in plain numbers.</p>
-      </header>
+    <main className="mx-auto max-w-5xl px-6 py-8 md:py-12">
+      <nav className="flex items-center justify-between">
+        <span className="text-xl font-bold text-emerald-700">Storepulse</span>
+        <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">
+          See the live demo
+        </Link>
+      </nav>
 
-      <section className="rounded-2xl bg-emerald-50 p-6">
-        <p className="text-sm font-medium text-emerald-800">Money left on the table (estimate)</p>
-        <p className="text-4xl font-bold text-emerald-900">{usd(data.money_left.total_usd)}</p>
-        <p className="mt-1 text-xs text-emerald-800">{data.money_left.assumptions}</p>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {data.money_left.items.map((it) => (
-            <div key={it.title} className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="font-semibold">{it.title}</p>
-              <p className="text-sm text-gray-600">{it.detail}</p>
-              <p className="mt-2 font-bold text-emerald-700">About {usd(it.value_usd)}</p>
+      <section className="py-16 md:py-24">
+        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-emerald-700">
+          For small online sellers, anywhere in the world
+        </p>
+        <h1 className="max-w-3xl text-4xl font-bold leading-tight md:text-6xl">
+          Find the money your store is leaving on the table.
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg text-gray-600">
+          Upload your Shopify or Etsy orders and see who is due to reorder, what to bundle, and where your revenue is
+          heading. It is like having an analyst, without paying for one.
+        </p>
+        <div className="mt-8">
+          <WaitlistForm id="top-form" />
+        </div>
+        <p className="mt-4 text-sm text-gray-600">
+          Curious first?{" "}
+          <Link href="/demo" className="font-medium text-emerald-700 underline">
+            Try the demo with sample data
+          </Link>
+          .
+        </p>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        {features.map((f) => (
+          <div key={f.title} className="rounded-2xl border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold">{f.title}</h2>
+            <p className="mt-2 text-gray-600">{f.text}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="py-16">
+        <h2 className="text-2xl font-bold">How it works</h2>
+        <div className="mt-6 grid gap-6 md:grid-cols-3">
+          {steps.map((s) => (
+            <div key={s.n}>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">
+                {s.n}
+              </div>
+              <h3 className="mt-3 font-semibold">{s.title}</h3>
+              <p className="mt-1 text-gray-600">{s.text}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        {data.bundle && (
-          <div className="rounded-xl border p-4">
-            <p className="font-semibold">Bundle idea</p>
-            <p className="text-sm text-gray-600">
-              {data.bundle.products[0]} and {data.bundle.products[1]} are bought together by{" "}
-              {data.bundle.customers} customers ({Math.round(data.bundle.share_of_customers * 100)}% of your base).
-              Try selling them as a bundle.
-            </p>
-          </div>
-        )}
-        <div className="rounded-xl border p-4">
-          <p className="font-semibold">Concentration risk</p>
-          <p className="text-sm text-gray-600">
-            {data.concentration.product} brings in {Math.round(data.concentration.share * 100)}% of your revenue.
-            Losing it would hurt, so consider growing your other products.
-          </p>
+      <section className="rounded-2xl bg-gray-50 p-6 md:p-8">
+        <h2 className="text-xl font-bold">Your data stays yours</h2>
+        <p className="mt-2 max-w-3xl text-gray-600">
+          Your file is analyzed and not kept. Customer emails are scrambled the moment they are read, so we never store
+          who your customers are. Numbers are estimates and we show you exactly how we calculate them.
+        </p>
+      </section>
+
+      <section className="py-16 text-center">
+        <h2 className="text-3xl font-bold">Be first in line</h2>
+        <p className="mx-auto mt-3 max-w-xl text-gray-600">
+          Early members get a founding price and a say in what we build next.
+        </p>
+        <div className="mt-6 flex justify-center">
+          <WaitlistForm />
         </div>
       </section>
 
-      <section className="rounded-xl border p-4">
-        <p className="mb-2 font-semibold">Monthly revenue and 3-month forecast (USD)</p>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={rows}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="actual" name="Actual" stroke="#059669" strokeWidth={2} />
-              <Line type="monotone" dataKey="forecast" name="Forecast" stroke="#6366f1" strokeDasharray="5 5" strokeWidth={2} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-        {partial && (
-          <p className="mt-2 text-xs text-gray-500">
-            {partial.month} is still in progress and is left out of the chart and forecast.
-          </p>
-        )}
-      </section>
-
-      <section className="rounded-xl border p-4">
-        <p className="mb-2 font-semibold">Top products</p>
-        {data.top_products.map((p) => (
-          <div key={p.product} className="flex justify-between border-b py-2 text-sm last:border-0">
-            <span>{p.product}</span>
-            <span>
-              {usd(p.revenue_usd)} / {p.units} units
-            </span>
-          </div>
-        ))}
-      </section>
+      <footer className="border-t pt-6 text-sm text-gray-500">
+        Storepulse. Built for small sellers everywhere.
+      </footer>
     </main>
   );
 }
