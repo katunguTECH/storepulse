@@ -82,8 +82,10 @@ export default function WaitlistForm({ id }: { id?: string }) {
       </div>
       {status === "error" && <p className="mt-2 text-sm text-red-600">{message}</p>}
       <p className="mt-2 text-xs text-gray-500">
-        We will only email you about Storepulse. Unsubscribe any time. No spam.
+        We will only email you about Storepulse. Unsubscribe any time. <a href="/privacy" className="underline">Privacy policy</a>.
       </p>
     </form>
   );
 }
+
+

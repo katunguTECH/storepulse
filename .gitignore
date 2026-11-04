@@ -5,3 +5,4 @@ node_modules/
 .next/
 *.db
 data/*.csv
+!data/sample_orders.csv
