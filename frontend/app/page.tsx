@@ -109,8 +109,10 @@ export default function Landing() {
       </section>
 
       <footer className="border-t pt-6 text-sm text-gray-500">
-        Storepulse. Built for small sellers everywhere.
+        <Link href="/seo-checker" className="underline">Free listing SEO checker</Link> | <Link href="/seo-checker" className="underline">Free listing SEO checker</Link> | Storepulse. Built for small sellers everywhere.
       </footer>
     </main>
   );
 }
+
+

@@ -3,9 +3,9 @@ from collections import defaultdict
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app import analytics, waitlist
+from app import analytics, seo, waitlist
 
 MAX_BYTES = 15 * 1024 * 1024
 
@@ -73,3 +73,19 @@ def join_waitlist(body: WaitlistIn, request: Request):
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
     waitlist.add_email(email)
     return {"ok": True}
+
+
+
+class SeoIn(BaseModel):
+    title: str = Field(default="", max_length=300)
+    description: str = Field(default="", max_length=10000)
+    tags: str = Field(default="", max_length=1000)
+    keyword: str = Field(default="", max_length=100)
+    platform: str = Field(default="etsy", max_length=20)
+
+
+@app.post("/seo-score")
+def seo_score(body: SeoIn):
+    if not body.title.strip():
+        raise HTTPException(status_code=400, detail="Please paste your listing title.")
+    return seo.score_listing(body.title, body.description, body.tags, body.keyword, body.platform)
