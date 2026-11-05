@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+
 
 export default function WaitlistForm({ id }: { id?: string }) {
   const [email, setEmail] = useState("");
@@ -15,7 +15,7 @@ export default function WaitlistForm({ id }: { id?: string }) {
     setStatus("loading");
     setMessage("");
     try {
-      const r = await fetch(`${API}/waitlist`, {
+      const r = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, website }),
@@ -87,5 +87,6 @@ export default function WaitlistForm({ id }: { id?: string }) {
     </form>
   );
 }
+
 
 

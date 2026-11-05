@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import WaitlistForm from "@/components/WaitlistForm";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+
 
 type Check = {
   name: string;
@@ -46,7 +46,7 @@ export default function SeoChecker() {
     setBusy(true);
     setError("");
     try {
-      const r = await fetch(`${API}/seo-score`, {
+      const r = await fetch("/api/seo-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, tags, keyword, platform }),
@@ -81,9 +81,6 @@ export default function SeoChecker() {
       <nav className="flex items-center justify-between">
         <Link href="/" className="text-xl font-bold text-emerald-700">
           Storepulse
-        </Link>
-        <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">
-          See the live demo
         </Link>
       </nav>
 
@@ -184,3 +181,4 @@ export default function SeoChecker() {
     </main>
   );
 }
+

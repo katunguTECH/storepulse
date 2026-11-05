@@ -38,9 +38,6 @@ export default function Landing() {
     <main className="mx-auto max-w-5xl px-6 py-8 md:py-12">
       <nav className="flex items-center justify-between">
         <span className="text-xl font-bold text-emerald-700">Storepulse</span>
-        <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">
-          See the live demo
-        </Link>
       </nav>
 
       <section className="py-16 md:py-24">
@@ -57,13 +54,6 @@ export default function Landing() {
         <div className="mt-8">
           <WaitlistForm id="top-form" />
         </div>
-        <p className="mt-4 text-sm text-gray-600">
-          Curious first?{" "}
-          <Link href="/demo" className="font-medium text-emerald-700 underline">
-            Try the demo with sample data
-          </Link>
-          .
-        </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
@@ -114,6 +104,7 @@ export default function Landing() {
     </main>
   );
 }
+
 
 
 
