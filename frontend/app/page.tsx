@@ -23,7 +23,7 @@ const features = [
   },
   {
     title: "Coming soon",
-    text: "Free listing SEO checks, competitor comparison, profit after fees, and weekly action emails.",
+    text: "Competitor comparison, profit after fees, and weekly action emails. The free SEO checker and order-file reports are already live.",
   },
 ];
 
@@ -37,7 +37,7 @@ export default function Landing() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-8 md:py-12">
       <nav className="flex items-center justify-between">
-        <span className="text-xl font-bold text-emerald-700">Storepulse</span>
+        <span className="text-xl font-bold text-emerald-700">Storepulse</span><Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">Try the demo</Link>
       </nav>
 
       <section className="py-16 md:py-24">
@@ -52,7 +52,7 @@ export default function Landing() {
           heading. It is like having an analyst, without paying for one.
         </p>
         <div className="mt-8">
-          <WaitlistForm id="top-form" />
+          <WaitlistForm id="top-form" /><p className="mt-4 text-sm text-gray-600">Curious first? <Link href="/demo" className="font-medium text-emerald-700 underline">Try the demo with sample data</Link>, or <Link href="/seo-checker" className="font-medium text-emerald-700 underline">check a listing with the free SEO checker</Link>.</p>
         </div>
       </section>
 
@@ -104,6 +104,7 @@ export default function Landing() {
     </main>
   );
 }
+
 
 
 

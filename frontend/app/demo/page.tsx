@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 type Report = {
   meta: { source: string; orders: number; customers: number; start: string; end: string; warnings: string[] };
@@ -19,22 +18,13 @@ type Row = { month: string; actual?: number; forecast?: number };
 const usd = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
-async function request(path: string, init?: RequestInit): Promise<Report> {
-  const r = await fetch(`${API}${path}`, init);
-  if (!r.ok) {
-    let msg = "Something went wrong.";
-    try {
-      const j = await r.json();
-      if (j.detail) msg = j.detail;
-    } catch {}
-    throw new Error(msg);
-  }
-  return r.json();
-}
-
-function toMessage(err: unknown): string {
-  if (err instanceof TypeError) return "Cannot reach the Storepulse API. Is uvicorn running on port 8000?";
-  return err instanceof Error ? err.message : "Something went wrong.";
+async function fail(r: Response): Promise<never> {
+  let msg = "Something went wrong. Please try again.";
+  try {
+    const j = await r.json();
+    if (typeof j.detail === "string") msg = j.detail;
+  } catch {}
+  throw new Error(msg);
 }
 
 export default function Demo() {
@@ -46,9 +36,11 @@ export default function Demo() {
   const loadDemo = async () => {
     setError("");
     try {
-      setData(await request("/report"));
+      const r = await fetch("/demo-report.json");
+      if (!r.ok) await fail(r);
+      setData(await r.json());
     } catch (err) {
-      setError(toMessage(err));
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     }
   };
 
@@ -64,9 +56,11 @@ export default function Demo() {
     try {
       const fd = new FormData();
       fd.append("file", f);
-      setData(await request("/analyze", { method: "POST", body: fd }));
+      const r = await fetch("/api/analyze", { method: "POST", body: fd });
+      if (!r.ok) await fail(r);
+      setData(await r.json());
     } catch (err) {
-      setError(toMessage(err));
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setBusy(false);
       e.target.value = "";
@@ -86,7 +80,9 @@ export default function Demo() {
     <main className="mx-auto max-w-5xl space-y-8 p-6 md:p-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Storepulse</h1>
+          <Link href="/" className="text-2xl font-bold text-emerald-700">
+            Storepulse
+          </Link>
           <p className="text-gray-500">Your store, explained in plain numbers.</p>
         </div>
         <div className="flex gap-2">
@@ -113,7 +109,7 @@ export default function Demo() {
         <>
           <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
             {data.meta.source === "demo"
-              ? "Showing sample data. Upload an order export from Shopify or Etsy to see your own store. "
+              ? "Showing sample data. Upload an order export from Shopify or Etsy (CSV, up to 4 MB) to see your own store. "
               : "Your file was analyzed and not kept; customer emails were scrambled immediately. "}
             {data.meta.orders.toLocaleString()} orders, {data.meta.customers.toLocaleString()} customers, {data.meta.start} to {data.meta.end}.
             {data.meta.warnings.map((w) => (
@@ -198,5 +194,3 @@ export default function Demo() {
     </main>
   );
 }
-
-
