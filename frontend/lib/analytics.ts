@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { type Rates } from "./rates";
 
 export class UserError extends Error {}
 
@@ -13,16 +14,6 @@ type Line = {
 type OrderRow = { customer: string; date: number; amountUsd: number };
 type Raw = { order: string; customer: string; product: string; qty: string; price: string; currency: string; date: string };
 type Month = { month: string; revenue_usd: number; partial: boolean };
-
-// Placeholder rates for testing only. Replace with a daily rates feed before relying on converted numbers.
-const RATES_TO_USD: Record<string, number> = {
-  USD: 1, EUR: 1.087, GBP: 1.266, KES: 0.00775,
-  AUD: 0.65, CAD: 0.72, NZD: 0.59, CHF: 1.13, SEK: 0.095, NOK: 0.092,
-  DKK: 0.146, PLN: 0.25, JPY: 0.0066, INR: 0.012, NGN: 0.00065,
-  ZAR: 0.055, GHS: 0.085, UGX: 0.00027, TZS: 0.00038, AED: 0.272,
-  SAR: 0.267, BRL: 0.18, MXN: 0.052, SGD: 0.75, TRY: 0.029,
-  PHP: 0.017, IDR: 0.000063, MYR: 0.22,
-};
 
 const ALIASES: Record<string, string[]> = {
   order_id: ["name", "order id", "order_id", "order number", "order"],
@@ -107,7 +98,7 @@ function parseDate(s: string): number {
   return Date.parse(t);
 }
 
-export function normalizeUpload(text: string): { lines: Line[]; warnings: string[] } {
+export function normalizeUpload(text: string, rates: Rates): { lines: Line[]; warnings: string[] } {
   const warnings: string[] = [];
   const table = parseCsv(text).filter((r) => r.some((c) => c.trim() !== ""));
   if (table.length < 2) {
@@ -186,7 +177,7 @@ export function normalizeUpload(text: string): { lines: Line[]; warnings: string
   const hasCurrency = idx.currency !== -1;
   if (!hasCurrency) warnings.push("No currency column found, so all amounts were treated as USD.");
 
-  const parsed: (Line & { currency: string })[] = [];
+  const parsed: (Omit<Line, "amountUsd"> & { amount: number; currency: string })[] = [];
   for (const r of rows) {
     const date = r.date ? parseDate(r.date) : NaN;
     const cleaned = r.price.replace(/[^0-9.\-]/g, "");
@@ -196,10 +187,10 @@ export function normalizeUpload(text: string): { lines: Line[]; warnings: string
     const amount = price * quantity;
     if (!r.customer || !r.product || Number.isNaN(date) || Number.isNaN(amount)) continue;
     const currency = (hasCurrency ? r.currency || "USD" : "USD").toUpperCase();
-    parsed.push({ order: r.order, customer: r.customer, product: r.product, quantity, date, amountUsd: amount, currency });
+    parsed.push({ order: r.order, customer: r.customer, product: r.product, quantity, date, amount, currency });
   }
 
-  const unknown = Array.from(new Set(parsed.map((l) => l.currency).filter((c) => !(c in RATES_TO_USD)))).sort();
+  const unknown = Array.from(new Set(parsed.map((l) => l.currency).filter((c) => !(c in rates)))).sort();
   let kept = parsed;
   if (unknown.length) {
     const n = parsed.filter((l) => unknown.includes(l.currency)).length;
@@ -222,7 +213,7 @@ export function normalizeUpload(text: string): { lines: Line[]; warnings: string
     product: l.product,
     quantity: l.quantity,
     date: l.date,
-    amountUsd: l.amountUsd * RATES_TO_USD[l.currency],
+    amountUsd: l.amount * rates[l.currency],
   }));
   return { lines, warnings };
 }

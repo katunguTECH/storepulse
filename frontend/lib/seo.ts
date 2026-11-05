@@ -100,16 +100,18 @@ export function scoreListing(titleIn: string, descriptionIn: string, tagsIn: str
     add("Keyword in description opening", e, 10, detail, "Mention your main keyword naturally in the first sentence of the description.");
 
     const occ = countOccurrences(dLow, keyword);
-    const dens = ((occ * kwWords.length) / Math.max(wc, 1)) * 100;
     if (occ === 0) {
       e = 0;
       detail = "Your keyword is never used in the description.";
-    } else if (dens > 4) {
+    } else if (occ === 1) {
+      e = 10;
+      detail = "Your keyword is used once in the description. Using it 2-3 times naturally would be even stronger.";
+    } else if (occ <= 4) {
+      e = 10;
+      detail = `Your keyword is used ${occ} times, a natural amount.`;
+    } else {
       e = 3;
       detail = `Your keyword is used ${occ} times, which looks like keyword stuffing.`;
-    } else {
-      e = 10;
-      detail = `Your keyword is used ${occ} time(s), a natural amount.`;
     }
     add("Keyword use in description", e, 10, detail, "Use the keyword a few times naturally, and add related phrases instead of repeating it.");
   }

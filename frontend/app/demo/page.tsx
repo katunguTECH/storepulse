@@ -122,7 +122,7 @@ export default function Demo() {
           <section className="rounded-2xl bg-emerald-50 p-6">
             <p className="text-sm font-medium text-emerald-800">Money left on the table (estimate)</p>
             <p className="text-4xl font-bold text-emerald-900">{usd(data.money_left.total_usd)}</p>
-            <p className="mt-1 text-xs text-emerald-800">{data.money_left.assumptions}</p>
+            <p className="mt-1 text-xs text-emerald-800">{data.meta.source === "upload" ? "Converted to USD using approximate rates. " : ""}{data.money_left.assumptions}</p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {data.money_left.items.map((it) => (
                 <div key={it.title} className="rounded-xl bg-white p-4 shadow-sm">
@@ -194,3 +194,4 @@ export default function Demo() {
     </main>
   );
 }
+

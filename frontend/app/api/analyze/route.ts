@@ -1,8 +1,31 @@
 import { buildReport, normalizeUpload, UserError } from "@/lib/analytics";
+import { getRates } from "@/lib/rates";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 
+// Simple in-memory limit: 5 uploads per hour per visitor IP (per server instance).
+const hits = new Map<string, number[]>();
+
+function limited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 3600 * 1000);
+  if (recent.length >= 5) {
+    hits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  hits.set(ip, recent);
+  return false;
+}
+
 export async function POST(request: Request) {
+  const ip = (request.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  if (limited(ip)) {
+    return Response.json(
+      { detail: "Too many uploads. Please try again in an hour." },
+      { status: 429 }
+    );
+  }
   let form: FormData;
   try {
     form = await request.formData();
@@ -18,7 +41,8 @@ export async function POST(request: Request) {
   }
   try {
     const text = await file.text();
-    const { lines, warnings } = normalizeUpload(text);
+    const rates = await getRates();
+    const { lines, warnings } = normalizeUpload(text, rates);
     return Response.json(buildReport(lines, "upload", warnings));
   } catch (e) {
     const detail =
