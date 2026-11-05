@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DATA_FILE = Path(__file__).resolve().parents[2] / "data" / "sample_orders.csv"
+DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "sample_orders.csv"
 
 # Placeholder rates for testing. Replace with a daily rates table before launch.
 RATES_TO_USD = {"USD": 1.0, "EUR": 1.087, "GBP": 1.266, "KES": 0.00775}
@@ -229,3 +229,4 @@ def build_report(df, source="upload", warnings=None):
         "bundle": bundle_opportunity(df),
         "concentration": concentration(df),
     }
+

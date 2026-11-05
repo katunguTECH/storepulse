@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from app import analytics, seo, waitlist
 
-MAX_BYTES = 15 * 1024 * 1024
+MAX_BYTES = 4 * 1024 * 1024
 ORIGINS = [
     o.strip()
     for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
@@ -76,7 +76,7 @@ def report():
 async def analyze(file: UploadFile = File(...)):
     raw = await file.read()
     if len(raw) > MAX_BYTES:
-        raise HTTPException(status_code=413, detail="File is too large (15 MB maximum).")
+        raise HTTPException(status_code=413, detail="File is too large (4 MB maximum).")
     try:
         df, warnings = analytics.normalize_upload(raw)
         return analytics.build_report(df, source="upload", warnings=warnings)
@@ -107,3 +107,4 @@ def seo_score(body: SeoIn):
     if not body.title.strip():
         raise HTTPException(status_code=400, detail="Please paste your listing title.")
     return seo.score_listing(body.title, body.description, body.tags, body.keyword, body.platform)
+
