@@ -5,7 +5,7 @@ import WaitlistForm from "@/components/WaitlistForm";
 export const metadata: Metadata = {
   title: "Storepulse: find the money your store is leaving on the table",
   description:
-    "Upload your Shopify or Etsy orders and see which customers are due to reorder, what to bundle, and where your revenue is heading. Built for small online sellers worldwide.",
+    "Upload your order history from Shopify, Etsy, Amazon, eBay, Wix, TikTok Shop, WooCommerce, Squarespace, or BigCommerce and see which customers are due to reorder, what to bundle, and where your revenue is heading.",
 };
 
 const features = [
@@ -28,7 +28,7 @@ const features = [
 ];
 
 const steps = [
-  { n: "1", title: "Export your orders", text: "Download a CSV from Shopify or Etsy. It takes about a minute." },
+  { n: "1", title: "Export your orders", text: "Download a CSV from Shopify, Etsy, Amazon, or wherever you sell. It takes about a minute." },
   { n: "2", title: "Drop it in", text: "Upload the file. No store login or password needed." },
   { n: "3", title: "Get your report", text: "See opportunities and next steps in plain language." },
 ];
@@ -49,8 +49,7 @@ export default function Landing() {
           Find the money your store is leaving on the table.
         </h1>
         <p className="mt-5 max-w-2xl text-lg text-gray-600">
-          Upload your Shopify or Etsy orders and see who is due to reorder, what to bundle, and where your revenue is
-          heading. It is like having an analyst, without paying for one.
+          Upload your orders from any platform—Shopify, Etsy, Amazon, eBay, Wix, TikTok Shop, WooCommerce, Squarespace, BigCommerce—and see who is due to reorder, what to bundle, and where your revenue is heading. It is like having an analyst, without paying for one.
         </p>
         <div className="mt-8">
           <WaitlistForm id="top-form" />
@@ -94,7 +93,7 @@ export default function Landing() {
         <h2 className="text-3xl font-bold">Be first in line</h2>
         <p className="mx-auto mt-3 max-w-xl text-gray-600">
           Early members get a founding price and a say in what we build next. Storepulse will soon connect directly to 
-          Shopify and Etsy to automate this for you every week.
+          your store platform to automate this for you every week.
         </p>
         <div className="mt-6 flex justify-center">
           <WaitlistForm />
