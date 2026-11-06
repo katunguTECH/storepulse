@@ -42,7 +42,7 @@ export default function Landing() {
           <img 
             src="/logo.jpg" 
             alt="Storepulse" 
-            className="h-10 w-auto object-contain mix-blend-multiply" 
+            className="h-20 w-auto object-contain mix-blend-multiply" 
           />
         </Link>
         <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">

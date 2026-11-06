@@ -126,10 +126,15 @@ export default function Demo() {
     <main className="mx-auto max-w-5xl space-y-8 p-6 md:p-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Link href="/" className="text-2xl font-bold text-emerald-700">
-            Storepulse
+          <Link href="/">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="/logo.jpg" 
+              alt="Storepulse" 
+              className="h-20 w-auto object-contain mix-blend-multiply" 
+            />
           </Link>
-          <p className="text-gray-500">Your store, explained in plain numbers.</p>
+          <p className="text-gray-500 mt-1">Your store, explained in plain numbers.</p>
         </div>
         
         <div className="flex flex-wrap gap-2 items-center">

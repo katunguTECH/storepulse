@@ -82,7 +82,7 @@ export default function SeoChecker() {
           <img 
             src="/logo.jpg" 
             alt="Storepulse" 
-            className="h-10 w-auto object-contain mix-blend-multiply" 
+            className="h-20 w-auto object-contain mix-blend-multiply" 
           />
         </Link>
       </nav>
