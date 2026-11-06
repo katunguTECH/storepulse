@@ -25,7 +25,6 @@ const ALIASES: Record<string, string[]> = {
   date: ["created at", "sale date", "date", "order date", "created_at"],
 };
 
-// Assumptions shown to the user, so estimates are never presented as facts.
 const REORDER_RATE = 0.3;
 const WIN_BACK_RATE = 0.1;
 
@@ -42,6 +41,13 @@ function median(a: number[]): number {
 
 export function parseCsv(input: string): string[][] {
   const text = input.charCodeAt(0) === 0xfeff ? input.slice(1) : input;
+  
+  // Detect delimiter: count commas vs semicolons in the first line
+  const firstLine = text.split(/\r?\n/)[0] || "";
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semiCount = (firstLine.match(/;/g) || []).length;
+  const delimiter = semiCount > commaCount ? ";" : ",";
+
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -61,7 +67,7 @@ export function parseCsv(input: string): string[][] {
       }
     } else if (c === '"') {
       inQuotes = true;
-    } else if (c === ",") {
+    } else if (c === delimiter) {
       row.push(field);
       field = "";
     } else if (c === "\n" || c === "\r") {
@@ -180,8 +186,15 @@ export function normalizeUpload(text: string, rates: Rates): { lines: Line[]; wa
   const parsed: (Omit<Line, "amountUsd"> & { amount: number; currency: string })[] = [];
   for (const r of rows) {
     const date = r.date ? parseDate(r.date) : NaN;
-    const cleaned = r.price.replace(/[^0-9.\-]/g, "");
+    
+    // Handle European decimal format: "18,50" → "18.50"
+    let priceStr = r.price.trim();
+    if (priceStr.includes(",") && (!priceStr.includes(".") || priceStr.lastIndexOf(",") > priceStr.lastIndexOf("."))) {
+      priceStr = priceStr.replace(/\./g, "").replace(",", ".");
+    }
+    const cleaned = priceStr.replace(/[^0-9.\-]/g, "");
     const price = cleaned === "" ? NaN : Number(cleaned);
+
     const q = r.qty === "" ? NaN : Number(r.qty);
     const quantity = Number.isNaN(q) ? 1 : q;
     const amount = price * quantity;
@@ -439,23 +452,19 @@ function calculateProfit(lines: Line[], inputs: { cogs: number, shipping: number
 function buildActionPlan(report: any): string[] {
   const actions: string[] = [];
 
-  // 1. Reorder action
   if (report.money_left.items[0].value_usd > 0) {
     const count = report.money_left.items[0].title.split(" ")[0];
     actions.push(`Send a "We miss you" email to the ${count} customers who are overdue to reorder. Potential win: $${report.money_left.items[0].value_usd}.`);
   }
 
-  // 2. Bundle action
   if (report.bundle) {
     actions.push(`Create a product bundle combining ${report.bundle.products[0]} and ${report.bundle.products[1]}. ${report.bundle.customers} of your customers already buy both.`);
   }
 
-  // 3. Concentration action
   if (report.concentration.share > 0.25) {
     actions.push(`Run a small promotion on your other products. ${report.concentration.product} makes up ${Math.round(report.concentration.share * 100)}% of your revenue, which is risky if it goes out of stock.`);
   }
 
-  // 4. Lapsed customers action
   if (report.money_left.items[1].value_usd > 0) {
     const count = report.money_left.items[1].title.split(" ")[0];
     actions.push(`Launch a win-back offer for the ${count} customers who have gone quiet. Potential win: $${report.money_left.items[1].value_usd}.`);

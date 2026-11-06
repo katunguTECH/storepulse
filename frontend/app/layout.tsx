@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import FeedbackButton from "@/components/FeedbackButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description:
     "Upload your Shopify or Etsy orders to find out who is due to reorder, calculate your true profit, and get a weekly action plan. Built for small online sellers worldwide.",
   icons: {
-    icon: "/logo.jpg", // Adds the logo to the browser tab
+    icon: "/logo.jpg",
   },
   openGraph: {
     title: "Storepulse | Find the money your store is leaving on the table",
@@ -36,7 +37,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <FeedbackButton />
+      </body>
     </html>
   );
 }

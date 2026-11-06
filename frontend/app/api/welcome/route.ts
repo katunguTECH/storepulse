@@ -17,9 +17,9 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Storepulse <onboarding@resend.dev>", // Change this to hello@yourdomain.com once you buy a domain
+        from: "Storepulse <onboarding@resend.dev>",
         to: email,
-        subject: "You're on the Storepulse waitlist", // Removed the emoji to prevent encoding errors
+        subject: "You're on the Storepulse waitlist",
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
             <h2 style="color: #059669;">You're on the list!</h2>
@@ -38,6 +38,20 @@ export async function POST(request: Request) {
       const errorData = await res.json();
       console.error("RESEND API ERROR:", errorData);
       throw new Error("Failed to send email");
+    }
+
+    // Add the contact to the Resend audience for the follow-up sequence
+    try {
+      await fetch(`https://api.resend.com/audiences/YOUR_AUDIENCE_ID/contacts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({ email }),
+      });
+    } catch (e) {
+      console.error("Failed to add contact to audience:", e);
     }
 
     return NextResponse.json({ ok: true });
