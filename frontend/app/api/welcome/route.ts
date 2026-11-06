@@ -10,6 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
+    // 1. Send the welcome email
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -36,13 +37,13 @@ export async function POST(request: Request) {
 
     if (!res.ok) {
       const errorData = await res.json();
-      console.error("RESEND API ERROR:", errorData);
+      console.error("RESEND EMAIL API ERROR:", errorData);
       throw new Error("Failed to send email");
     }
 
-    // Add the contact to the global Resend Audience
+    // 2. Add the contact to Resend's Global Contacts
     try {
-      await fetch(`https://api.resend.com/audiences/contacts`, {
+      const contactRes = await fetch(`https://api.resend.com/contacts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,8 +51,13 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({ email }),
       });
+      
+      if (!contactRes.ok) {
+        const contactError = await contactRes.json();
+        console.error("RESEND CONTACT API ERROR:", contactError);
+      }
     } catch (e) {
-      console.error("Failed to add contact to audience:", e);
+      console.error("Failed to add contact:", e);
     }
 
     return NextResponse.json({ ok: true });
