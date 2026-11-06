@@ -414,7 +414,57 @@ function concentration(lines: Line[]) {
   return { product: top, share: round(topVal / total, 3) };
 }
 
-export function buildReport(lines: Line[], source: string, warnings: string[] = []) {
+function calculateProfit(lines: Line[], inputs: { cogs: number, shipping: number, feePct: number }) {
+  let gross = 0;
+  let fees = 0;
+  let costs = 0;
+  let units = 0;
+  
+  for (const l of lines) {
+    gross += l.amountUsd;
+    fees += l.amountUsd * (inputs.feePct / 100);
+    costs += (inputs.cogs + inputs.shipping) * l.quantity;
+    units += l.quantity;
+  }
+  
+  return {
+    gross_revenue: round(gross, 2),
+    platform_fees: round(fees, 2),
+    product_costs: round(costs, 2),
+    net_profit: round(gross - fees - costs, 2),
+    margin_pct: gross > 0 ? round(((gross - fees - costs) / gross) * 100, 1) : 0
+  };
+}
+
+function buildActionPlan(report: any): string[] {
+  const actions: string[] = [];
+
+  // 1. Reorder action
+  if (report.money_left.items[0].value_usd > 0) {
+    const count = report.money_left.items[0].title.split(" ")[0];
+    actions.push(`Send a "We miss you" email to the ${count} customers who are overdue to reorder. Potential win: $${report.money_left.items[0].value_usd}.`);
+  }
+
+  // 2. Bundle action
+  if (report.bundle) {
+    actions.push(`Create a product bundle combining ${report.bundle.products[0]} and ${report.bundle.products[1]}. ${report.bundle.customers} of your customers already buy both.`);
+  }
+
+  // 3. Concentration action
+  if (report.concentration.share > 0.25) {
+    actions.push(`Run a small promotion on your other products. ${report.concentration.product} makes up ${Math.round(report.concentration.share * 100)}% of your revenue, which is risky if it goes out of stock.`);
+  }
+
+  // 4. Lapsed customers action
+  if (report.money_left.items[1].value_usd > 0) {
+    const count = report.money_left.items[1].title.split(" ")[0];
+    actions.push(`Launch a win-back offer for the ${count} customers who have gone quiet. Potential win: $${report.money_left.items[1].value_usd}.`);
+  }
+
+  return actions;
+}
+
+export function buildReport(lines: Line[], source: string, warnings: string[] = [], profitInputs = { cogs: 0, shipping: 0, feePct: 0 }) {
   const orders = toOrders(lines);
   const months = monthlyRevenue(lines);
   let start = Infinity;
@@ -423,7 +473,8 @@ export function buildReport(lines: Line[], source: string, warnings: string[] = 
     if (l.date < start) start = l.date;
     if (l.date > end) end = l.date;
   }
-  return {
+  
+  const report = {
     meta: {
       source,
       orders: orders.length,
@@ -438,5 +489,11 @@ export function buildReport(lines: Line[], source: string, warnings: string[] = 
     top_products: topProducts(lines),
     bundle: bundleOpportunity(lines),
     concentration: concentration(lines),
+  };
+
+  return {
+    ...report,
+    profit: calculateProfit(lines, profitInputs),
+    action_plan: buildActionPlan(report)
   };
 }

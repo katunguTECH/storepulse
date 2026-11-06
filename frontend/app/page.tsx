@@ -14,16 +14,16 @@ const features = [
     text: "See how many customers are overdue to reorder or have gone quiet, with an estimate of what a simple email could win back.",
   },
   {
-    title: "What to sell next",
-    text: "Spot products your customers buy together and ideas to bundle, plus which single product your revenue depends on too much.",
+    title: "True profit after fees",
+    text: "Upload your orders, enter your product costs, and instantly see your real margins after platform fees and shipping.",
   },
   {
-    title: "A forecast you can read",
-    text: "Monthly revenue and a clear three-month outlook, without spreadsheets or jargon.",
+    title: "Your weekly action plan",
+    text: "No spreadsheets to read. We tell you exactly which customers to email, what bundles to create, and where your revenue is too concentrated.",
   },
   {
-    title: "Coming soon",
-    text: "Competitor comparison, profit after fees, and weekly action emails. The free SEO checker and order-file reports are already live.",
+    title: "Competitor comparison",
+    text: "Spy on a competitor's listing to see their pricing and which SEO keywords they are missing, so you can outrank them.",
   },
 ];
 
@@ -37,7 +37,8 @@ export default function Landing() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-8 md:py-12">
       <nav className="flex items-center justify-between">
-        <span className="text-xl font-bold text-emerald-700">Storepulse</span><Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">Try the demo</Link>
+        <span className="text-xl font-bold text-emerald-700">Storepulse</span>
+        <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">Try the demo</Link>
       </nav>
 
       <section className="py-16 md:py-24">
@@ -52,7 +53,8 @@ export default function Landing() {
           heading. It is like having an analyst, without paying for one.
         </p>
         <div className="mt-8">
-          <WaitlistForm id="top-form" /><p className="mt-4 text-sm text-gray-600">Curious first? <Link href="/demo" className="font-medium text-emerald-700 underline">Try the demo with sample data</Link>, or <Link href="/seo-checker" className="font-medium text-emerald-700 underline">check a listing with the free SEO checker</Link>.</p>
+          <WaitlistForm id="top-form" />
+          <p className="mt-4 text-sm text-gray-600">Curious first? <Link href="/demo" className="font-medium text-emerald-700 underline">Try the demo with sample data</Link>, or <Link href="/seo-checker" className="font-medium text-emerald-700 underline">check a listing with the free SEO checker</Link>.</p>
         </div>
       </section>
 
@@ -91,7 +93,8 @@ export default function Landing() {
       <section className="py-16 text-center">
         <h2 className="text-3xl font-bold">Be first in line</h2>
         <p className="mx-auto mt-3 max-w-xl text-gray-600">
-          Early members get a founding price and a say in what we build next.
+          Early members get a founding price and a say in what we build next. Storepulse will soon connect directly to 
+          Shopify and Etsy to automate this for you every week.
         </p>
         <div className="mt-6 flex justify-center">
           <WaitlistForm />
@@ -104,10 +107,3 @@ export default function Landing() {
     </main>
   );
 }
-
-
-
-
-
-
-

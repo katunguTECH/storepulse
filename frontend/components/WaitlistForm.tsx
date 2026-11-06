@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-
-
 export default function WaitlistForm({ id }: { id?: string }) {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
@@ -28,7 +26,17 @@ export default function WaitlistForm({ id }: { id?: string }) {
         } catch {}
         throw new Error(detail);
       }
+      
       setStatus("done");
+
+      // Trigger the welcome email silently in the background.
+      // We do this after setStatus("done") so the user sees the green box instantly.
+      fetch("/api/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch(() => {});
+
     } catch (err) {
       setStatus("error");
       setMessage(
@@ -87,6 +95,3 @@ export default function WaitlistForm({ id }: { id?: string }) {
     </form>
   );
 }
-
-
-

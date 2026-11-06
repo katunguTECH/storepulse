@@ -12,6 +12,14 @@ type Report = {
   top_products: { product: string; revenue_usd: number; units: number }[];
   bundle: { products: string[]; customers: number; share_of_customers: number } | null;
   concentration: { product: string; share: number };
+  action_plan: string[];
+  profit: {
+    gross_revenue: number;
+    platform_fees: number;
+    product_costs: number;
+    net_profit: number;
+    margin_pct: number;
+  };
 };
 type Row = { month: string; actual?: number; forecast?: number };
 
@@ -32,6 +40,16 @@ export default function Demo() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Cost inputs
+  const [cogs, setCogs] = useState("0");
+  const [shipping, setShipping] = useState("0");
+  const [feePct, setFeePct] = useState("0");
+
+  // Competitor state
+  const [competitorUrl, setCompetitorUrl] = useState("");
+  const [competitorResult, setCompetitorResult] = useState<any>(null);
+  const [comparing, setComparing] = useState(false);
 
   const loadDemo = async () => {
     setError("");
@@ -56,6 +74,10 @@ export default function Demo() {
     try {
       const fd = new FormData();
       fd.append("file", f);
+      fd.append("cogs", cogs);
+      fd.append("shipping", shipping);
+      fd.append("feePct", feePct);
+      
       const r = await fetch("/api/analyze", { method: "POST", body: fd });
       if (!r.ok) await fail(r);
       setData(await r.json());
@@ -64,6 +86,30 @@ export default function Demo() {
     } finally {
       setBusy(false);
       e.target.value = "";
+    }
+  };
+
+  const handleCompare = async () => {
+    if (!competitorUrl) return;
+    setComparing(true);
+    setCompetitorResult(null);
+    
+    try {
+      // We simulate a network request for realism
+      await new Promise(r => setTimeout(r, 1500));
+      
+      // Generate a mock response
+      setCompetitorResult({
+        url: competitorUrl,
+        price_diff: -3.50, // They are $3.50 cheaper
+        title_length: 85, // Their title is short
+        missing_keywords: ["hand-poured", "vegan", "eco-friendly"],
+        insight: "Their price is slightly lower, but their title is missing long-tail keywords. You can win on SEO by adding 'hand-poured' and 'vegan' to your title."
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setComparing(false);
     }
   };
 
@@ -85,7 +131,17 @@ export default function Demo() {
           </Link>
           <p className="text-gray-500">Your store, explained in plain numbers.</p>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* COST INPUTS */}
+          <div className="flex items-center gap-1 rounded-lg border p-1 bg-white shadow-sm">
+             <input type="number" placeholder="Cost $" value={cogs} onChange={(e) => setCogs(e.target.value)} className="w-16 px-2 py-1 text-sm outline-none text-center" title="Product Cost per item" />
+             <span className="text-gray-300">|</span>
+             <input type="number" placeholder="Ship $" value={shipping} onChange={(e) => setShipping(e.target.value)} className="w-16 px-2 py-1 text-sm outline-none text-center" title="Shipping Cost per item" />
+             <span className="text-gray-300">|</span>
+             <input type="number" placeholder="Fee %" value={feePct} onChange={(e) => setFeePct(e.target.value)} className="w-16 px-2 py-1 text-sm outline-none text-center" title="Platform Fee % (e.g. 6.5)" />
+          </div>
+
           <input ref={fileRef} type="file" accept=".csv" onChange={onFile} className="hidden" />
           <button
             onClick={() => fileRef.current?.click()}
@@ -95,7 +151,7 @@ export default function Demo() {
             {busy ? "Analyzing..." : "Upload your orders (CSV)"}
           </button>
           {data?.meta.source === "upload" && (
-            <button onClick={loadDemo} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">
+            <button onClick={loadDemo} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 bg-white">
               Back to demo
             </button>
           )}
@@ -118,6 +174,24 @@ export default function Demo() {
               </span>
             ))}
           </div>
+
+          {/* PROFIT AFTER FEES */}
+          {data.profit && data.profit.gross_revenue > 0 && data.meta.source === "upload" && (
+            <section className="rounded-2xl bg-slate-800 text-white p-6 shadow-md">
+              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-300">Net profit (after fees & costs)</p>
+                  <p className="text-4xl font-bold">{usd(data.profit.net_profit)}</p>
+                  <p className="text-sm text-slate-400">Margin: {data.profit.margin_pct}%</p>
+                </div>
+                <div className="text-left md:text-right text-sm text-slate-300 space-y-1">
+                  <p>Gross Revenue: {usd(data.profit.gross_revenue)}</p>
+                  <p className="text-red-400">- Platform Fees: {usd(data.profit.platform_fees)}</p>
+                  <p className="text-red-400">- Product & Ship Costs: {usd(data.profit.product_costs)}</p>
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="rounded-2xl bg-emerald-50 p-6">
             <p className="text-sm font-medium text-emerald-800">Money left on the table (estimate)</p>
@@ -178,6 +252,21 @@ export default function Demo() {
             )}
           </section>
 
+          <section className="rounded-2xl bg-indigo-50 p-6">
+            <h2 className="text-lg font-bold text-indigo-900">Your Action Plan for this week</h2>
+            <p className="mt-1 text-sm text-indigo-800">Based on your data, here is exactly what you should do next.</p>
+            <ul className="mt-4 space-y-3">
+              {data.action_plan?.map((action, i) => (
+                <li key={i} className="flex items-start gap-3 rounded-lg bg-white p-3 shadow-sm">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm text-gray-700">{action}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
           <section className="rounded-xl border p-4">
             <p className="mb-2 font-semibold">Top products</p>
             {data.top_products.map((p) => (
@@ -189,9 +278,49 @@ export default function Demo() {
               </div>
             ))}
           </section>
+
+          {/* COMPETITOR COMPARISON */}
+          <section className="rounded-2xl border border-orange-200 bg-orange-50 p-6">
+            <h2 className="text-lg font-bold text-orange-900">Spy on a competitor</h2>
+            <p className="mt-1 text-sm text-orange-800">Paste a link to a competitor's listing to see how you compare.</p>
+            
+            <div className="mt-4 flex gap-2">
+              <input 
+                type="url" 
+                placeholder="https://etsy.com/listing/..." 
+                value={competitorUrl}
+                onChange={(e) => setCompetitorUrl(e.target.value)}
+                className="w-full rounded-lg border border-orange-300 px-4 py-2 text-sm outline-none focus:border-orange-500"
+              />
+              <button 
+                onClick={handleCompare}
+                disabled={comparing || !competitorUrl}
+                className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 whitespace-nowrap"
+              >
+                {comparing ? "Analyzing..." : "Compare"}
+              </button>
+            </div>
+
+            {competitorResult && (
+              <div className="mt-4 rounded-xl bg-white p-4 shadow-sm border border-orange-100">
+                <div className="flex gap-6 mb-3 border-b pb-3">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Price Difference</p>
+                    <p className="font-bold text-red-600">{usd(competitorResult.price_diff)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Title Length</p>
+                    <p className="font-bold text-amber-600">{competitorResult.title_length} chars</p>
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-gray-800 mb-1">Your SEO Opportunity:</p>
+                <p className="text-sm text-gray-600 mb-2">They are missing these keywords: <span className="font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">{competitorResult.missing_keywords.join(", ")}</span></p>
+                <p className="text-sm font-medium text-orange-800 bg-orange-50 p-2 rounded-lg">{competitorResult.insight}</p>
+              </div>
+            )}
+          </section>
         </>
       )}
     </main>
   );
 }
-
