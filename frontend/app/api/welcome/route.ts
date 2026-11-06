@@ -40,9 +40,9 @@ export async function POST(request: Request) {
       throw new Error("Failed to send email");
     }
 
-    // Add the contact to the Resend audience for the follow-up sequence
+    // Add the contact to the global Resend Audience
     try {
-      await fetch(`https://api.resend.com/audiences/YOUR_AUDIENCE_ID/contacts`, {
+      await fetch(`https://api.resend.com/audiences/contacts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
