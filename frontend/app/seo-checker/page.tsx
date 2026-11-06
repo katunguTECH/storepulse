@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import WaitlistForm from "@/components/WaitlistForm";
 
-
-
 type Check = {
   name: string;
   status: "pass" | "warn" | "fail";
@@ -63,7 +61,7 @@ export default function SeoChecker() {
     } catch (err) {
       setError(
         err instanceof TypeError
-          ? "Cannot reach the Storepulse API. Is uvicorn running on port 8000?"
+          ? "Please try again in a moment."
           : err instanceof Error
             ? err.message
             : "Something went wrong."
@@ -79,8 +77,13 @@ export default function SeoChecker() {
   return (
     <main className="mx-auto max-w-3xl space-y-8 p-6 md:p-10">
       <nav className="flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-emerald-700">
-          Storepulse
+        <Link href="/">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="/logo.jpg" 
+            alt="Storepulse" 
+            className="h-10 w-auto object-contain mix-blend-multiply" 
+          />
         </Link>
       </nav>
 
@@ -181,4 +184,3 @@ export default function SeoChecker() {
     </main>
   );
 }
-

@@ -37,8 +37,17 @@ export default function Landing() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-8 md:py-12">
       <nav className="flex items-center justify-between">
-        <span className="text-xl font-bold text-emerald-700">Storepulse</span>
-        <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">Try the demo</Link>
+        <Link href="/">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="/logo.jpg" 
+            alt="Storepulse" 
+            className="h-10 w-auto object-contain mix-blend-multiply" 
+          />
+        </Link>
+        <Link href="/demo" className="text-sm font-medium text-gray-700 hover:text-emerald-700">
+          Try the demo
+        </Link>
       </nav>
 
       <section className="py-16 md:py-24">
@@ -53,7 +62,9 @@ export default function Landing() {
         </p>
         <div className="mt-8">
           <WaitlistForm id="top-form" />
-          <p className="mt-4 text-sm text-gray-600">Curious first? <Link href="/demo" className="font-medium text-emerald-700 underline">Try the demo with sample data</Link>, or <Link href="/seo-checker" className="font-medium text-emerald-700 underline">check a listing with the free SEO checker</Link>.</p>
+          <p className="mt-4 text-sm text-gray-600">
+            Curious first? <Link href="/demo" className="font-medium text-emerald-700 underline">Try the demo with sample data</Link>, or <Link href="/seo-checker" className="font-medium text-emerald-700 underline">check a listing with the free SEO checker</Link>.
+          </p>
         </div>
       </section>
 

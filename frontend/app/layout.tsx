@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Storepulse | Find the money your store is leaving on the table",
   description:
     "Upload your Shopify or Etsy orders to find out who is due to reorder, calculate your true profit, and get a weekly action plan. Built for small online sellers worldwide.",
+  icons: {
+    icon: "/logo.jpg", // Adds the logo to the browser tab
+  },
   openGraph: {
     title: "Storepulse | Find the money your store is leaving on the table",
     description:
