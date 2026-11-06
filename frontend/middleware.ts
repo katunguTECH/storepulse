@@ -13,13 +13,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const country = request.headers.get("x-country") || request.headers.get("cf-ipcountry") || "Unknown";
-  const city = request.headers.get("x-city") || "Unknown";
+  // Get the IP from Netlify's headers
+  const ip = 
+    request.headers.get("x-nf-client-connection-ip") || 
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
+    "Unknown";
 
+  // Fire and forget - send IP to our tracking route
   fetch(new URL("/api/track", request.url).toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ country, city, path: url }),
+    body: JSON.stringify({ ip, path: url }),
   }).catch(() => {});
 
   return NextResponse.next();

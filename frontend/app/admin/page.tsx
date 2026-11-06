@@ -74,6 +74,7 @@ export default function AdminDashboard() {
           </button>
         </header>
 
+        {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
             <p className="text-sm font-medium text-gray-500">Total Visits</p>
@@ -90,6 +91,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
+          {/* Waitlist Table */}
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
             <h2 className="mb-4 text-lg font-bold text-gray-900">Recent Signups</h2>
             <div className="space-y-3">
@@ -99,9 +101,11 @@ export default function AdminDashboard() {
                   <span className="text-gray-500">{new Date(w.created_at).toLocaleDateString()}</span>
                 </div>
               ))}
+              {data.recentWaitlist.length === 0 && <p className="text-sm text-gray-500">No signups yet.</p>}
             </div>
           </div>
 
+          {/* Locations Table */}
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
             <h2 className="mb-4 text-lg font-bold text-gray-900">Top Locations</h2>
             <div className="space-y-3">
@@ -116,13 +120,17 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Recent Visits */}
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
           <h2 className="mb-4 text-lg font-bold text-gray-900">Recent Activity</h2>
           <div className="space-y-3">
             {data.recentVisits.map((v: any, i: number) => (
-              <div key={i} className="flex justify-between border-b border-gray-50 pb-2 text-sm last:border-0">
-                <span className="font-medium text-gray-800">{v.path}</span>
-                <span className="text-gray-500">{v.city}, {v.country}</span>
+              <div key={i} className="flex justify-between items-start border-b border-gray-50 pb-2 text-sm last:border-0">
+                <div>
+                  <span className="font-medium text-gray-800 block">{v.path}</span>
+                  <span className="text-xs text-gray-400 font-mono">{v.ip || "No IP"}</span>
+                </div>
+                <span className="text-gray-500 text-right">{v.city || "Unknown"}, {v.country || "Unknown"}</span>
               </div>
             ))}
             {data.recentVisits.length === 0 && <p className="text-sm text-gray-500">No activity yet.</p>}
